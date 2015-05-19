@@ -29,7 +29,6 @@
     });
     setUsername = function() {
       username = cleanInput($usernameInput.val().trim());
-      console.log("client: USERNAME ENTERED: " + username);
       if (username != null) {
         $loginPage.fadeOut();
         $chatPage.show();
@@ -58,7 +57,6 @@
     addChatMessage = function(data, options) {
       var $messageBodyDiv, $messageDiv, $usernameDiv, userColor;
       userColor = getUsernameColor(data.username);
-      console.log("addchat NAME!:" + data.username + " || COLOR: " + userColor);
       $usernameDiv = $('<span class="username"/>').text(data.username).css('color', userColor);
       $messageBodyDiv = $('<span class="messageBody">').text(data.message);
       $messageDiv = $('<li class="message"/>').data('username', data.username).addClass("").append($usernameDiv, $messageBodyDiv);
@@ -88,7 +86,6 @@
     };
     getUsernameColor = function(name) {
       var hash, i, index, j, ref;
-      console.log("USERNAME-IN: " + name);
       hash = 7;
       for (i = j = 0, ref = name.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
         hash = name.charCodeAt(i) + (hash << 5) - hash;
@@ -100,8 +97,7 @@
       return $('<div/>').text(input).text();
     };
     socket.on('login', function(username) {
-      connected = true;
-      return console.log("client: user connected:" + username);
+      return connected = true;
     });
     socket.on('new message', function(data, options) {
       return addChatMessage(data, options);

@@ -37,12 +37,10 @@
 
   io.on('connection', function(socket) {
     var addedUser, showOldMessages;
-    console.log('new connection!');
     addedUser = false;
     showOldMessages = function() {
       return redisClient.lrange("messages", 0, -1, function(err, messages) {
         var i, len, message, ref, results;
-        console.log("allmes: " + messages);
         ref = messages.reverse();
         results = [];
         for (i = 0, len = ref.length; i < len; i++) {
@@ -58,8 +56,7 @@
       redisClient.sadd("users", username);
       addedUser = true;
       socket.emit('login', username);
-      socket.broadcast.emit("announcement", socket.username + " has joined the chat...");
-      return console.log("server: USERNAME ENTERED: " + username);
+      return socket.broadcast.emit("announcement", socket.username + " has joined the chat...");
     });
     socket.on('new message', function(message) {
       storeMessage(socket.username, message);
