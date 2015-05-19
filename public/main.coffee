@@ -9,20 +9,18 @@ $ ->
 
   # Initialize varibles
   $window = $(window)
-  $usernameInput = $('.usernameInput') # Input for username
-  $messages = $('.messages') # Messages area
-  $inputMessage = $('.inputMessage') # Input message input box
+  $usernameInput = $('.usernameInput')
+  $messages = $('.messages')
+  $inputMessage = $('.inputMessage')
 
-  $loginPage = $('.login.page') # The login page
-  $chatPage = $('.chat.page') # The chatroom page
+  $loginPage = $('.login.page')
+  $chatPage = $('.chat.page')
 
-  # Prompt for setting a username
   connected = false
   username = null
   $currentInput = $usernameInput.focus()
 
   socket = io()
-  # Sets the clients username
 
   # Keyboard events
   $window.keydown (event) ->
@@ -33,62 +31,43 @@ $ ->
     if event.which is 13
       if username
         sendMessage()
-        # socket.emit('stop typing')
-        # typing = false
       else
         setUsername()
 
   setUsername = ->
     username = cleanInput($usernameInput.val().trim())
-    console.log("client: USERNAME ENTERED: " + username)
-    # If the username is valid
     if username?
       $loginPage.fadeOut()
       $chatPage.show()
       $loginPage.off('click')
       $currentInput = $inputMessage.focus()
-      # Tell the server your username
       socket.emit('add user', username)
 
-  # Sends a chat message
   sendMessage = ->
-    # Prevent markup from being injected into the message
     message = cleanInput($inputMessage.val())
-    console.log(username + " entered this message:" + message)
-    # if there is a non-empty message and a server connection
     if (message && connected)
       $inputMessage.val('')
+      socket.emit('new message', message)
       addChatMessage
         username: username
         message: message
-      # tell server to execute 'new message' and send along one parameter
-      socket.emit('new message', message)
 
-  # Log a message
   log = (message, options) ->
     $el = $('<li>').addClass('log').text(message)
     addMessageElement($el, options)
 
-  # Adds the visual chat message to the message list
   addChatMessage = (data, options) ->
+
+    userColor = getUsernameColor(data.username)
     $usernameDiv = $('<span class="username"/>')
       .text(data.username)
-      .css('color', getUsernameColor(data.username))
-
-    console.log("usernameDiv: " + $usernameDiv)
-
+      .css('color', userColor)
     $messageBodyDiv = $('<span class="messageBody">')
       .text(data.message)
-
-    console.log("messageBodyDiv: " + $messageBodyDiv)
-
     $messageDiv = $('<li class="message"/>')
       .data('username', data.username)
       .addClass("")
       .append($usernameDiv, $messageBodyDiv)
-
-    console.log("messageDiv: " + $messageDiv)
-
     addMessageElement($messageDiv, options)
 
   addMessageElement = (el, options={}) ->
@@ -107,13 +86,11 @@ $ ->
     $messages[0].scrollTop = $messages[0].scrollHeight
 
   # Gets the color of a username through our hash function
-  getUsernameColor = (username) ->
-    # Compute hash code
+  getUsernameColor = (name) ->
     hash = 7
-    for i in [0...username.length]
-      hash = username.charCodeAt(i) + (hash << 5) - hash
+    for i in [0...name.length]
+      hash = name.charCodeAt(i) + (hash << 5) - hash
     index = Math.abs(hash % COLORS.length)
-    debugger;
     COLORS[index]
 
   # Prevents input from having injected markup
@@ -123,8 +100,9 @@ $ ->
   # socket events
   socket.on 'login', (username) ->
     connected = true
-    console.log("client: user connected:" + username)
 
-  # Whenever the server emits 'new message', update the chat body
-  socket.on 'new message', (data) ->
-    addChatMessage(data)
+  socket.on 'new message', (data, options) ->
+    addChatMessage(data, options)
+
+  socket.on 'announcement', (message) ->
+    log(message)

@@ -41,14 +41,13 @@
     sendMessage = function() {
       var message;
       message = cleanInput($inputMessage.val());
-      console.log(username + " entered this message:" + message);
       if (message && connected) {
         $inputMessage.val('');
-        addChatMessage({
+        socket.emit('new message', message);
+        return addChatMessage({
           username: username,
           message: message
         });
-        return socket.emit('new message', message);
       }
     };
     log = function(message, options) {
@@ -57,13 +56,12 @@
       return addMessageElement($el, options);
     };
     addChatMessage = function(data, options) {
-      var $messageBodyDiv, $messageDiv, $usernameDiv;
-      $usernameDiv = $('<span class="username"/>').text(data.username).css('color', getUsernameColor(data.username));
-      console.log("usernameDiv: " + $usernameDiv);
+      var $messageBodyDiv, $messageDiv, $usernameDiv, userColor;
+      userColor = getUsernameColor(data.username);
+      console.log("addchat NAME!:" + data.username + " || COLOR: " + userColor);
+      $usernameDiv = $('<span class="username"/>').text(data.username).css('color', userColor);
       $messageBodyDiv = $('<span class="messageBody">').text(data.message);
-      console.log("messageBodyDiv: " + $messageBodyDiv);
       $messageDiv = $('<li class="message"/>').data('username', data.username).addClass("").append($usernameDiv, $messageBodyDiv);
-      console.log("messageDiv: " + $messageDiv);
       return addMessageElement($messageDiv, options);
     };
     addMessageElement = function(el, options) {
@@ -88,14 +86,14 @@
       }
       return $messages[0].scrollTop = $messages[0].scrollHeight;
     };
-    getUsernameColor = function(username) {
+    getUsernameColor = function(name) {
       var hash, i, index, j, ref;
+      console.log("USERNAME-IN: " + name);
       hash = 7;
-      for (i = j = 0, ref = username.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
-        hash = username.charCodeAt(i) + (hash << 5) - hash;
+      for (i = j = 0, ref = name.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+        hash = name.charCodeAt(i) + (hash << 5) - hash;
       }
       index = Math.abs(hash % COLORS.length);
-      debugger;
       return COLORS[index];
     };
     cleanInput = function(input) {
@@ -105,8 +103,11 @@
       connected = true;
       return console.log("client: user connected:" + username);
     });
-    return socket.on('new message', function(data) {
-      return addChatMessage(data);
+    socket.on('new message', function(data, options) {
+      return addChatMessage(data, options);
+    });
+    return socket.on('announcement', function(message) {
+      return log(message);
     });
   });
 
